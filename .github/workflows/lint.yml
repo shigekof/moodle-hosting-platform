@@ -1,0 +1,94 @@
+---
+name: Lint
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  yamllint:
+    name: YAML Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Lint YAML files
+        run: |
+          yamllint docker-compose.yml \
+                   traefik/traefik.yml \
+                   clients/_template/docker-compose.yml.tpl \
+                   .github/workflows/deploy.yml \
+                   .github/workflows/lint.yml
+
+  shellcheck:
+    name: Shell Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get install -y shellcheck
+
+      - name: Lint shell scripts
+        run: |
+          shellcheck seed/seed.sh
+          shellcheck scripts/add-client.sh
+
+  # T029: Accessibility check (pa11y-ci) — runs on schedule or manual trigger
+  accessibility:
+    name: Accessibility (pa11y-ci)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install pa11y-ci
+        run: npm install -g pa11y-ci
+
+      - name: Run pa11y-ci against staging URL
+        env:
+          TARGET_URL: ${{ vars.PA11Y_TARGET_URL }}
+        run: |
+          : "${TARGET_URL:?PA11Y_TARGET_URL variable is not set}"
+          pa11y-ci "${TARGET_URL}" \
+            --runner axe \
+            --standard WCAG2AA \
+            --threshold 0
+
+  # T030: Lighthouse CI performance baseline — runs on schedule or manual trigger
+  lighthouse:
+    name: Lighthouse CI
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli
+
+      - name: Run Lighthouse CI
+        env:
+          LHCI_TARGET_URL: ${{ vars.LHCI_TARGET_URL }}
+        run: |
+          : "${LHCI_TARGET_URL:?LHCI_TARGET_URL variable is not set}"
+          lhci autorun \
+            --collect.url="${LHCI_TARGET_URL}" \
+            --assert.preset=lighthouse:recommended \
+            --assert.assertions.interactive.maxNumericValue=3000

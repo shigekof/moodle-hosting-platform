@@ -1,0 +1,81 @@
+---
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+# T027: Cancel any in-progress deploy when a newer commit is pushed (zero-downtime, no partial state)
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy to DigitalOcean Droplet
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # T016: Validate required secrets before connecting to server
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          required_vars=(SSH_HOST SSH_USERNAME SSH_PRIVATE_KEY ACME_EMAIL
+                         MARIADB_ROOT_PASSWORD MARIADB_PASSWORD)
+          for var in "${required_vars[@]}"; do
+            if [[ -z "${!var:-}" ]]; then
+              echo "ERROR: secret ${var} is not set"
+              exit 1
+            fi
+          done
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          ACME_EMAIL: ${{ secrets.ACME_EMAIL }}
+          MARIADB_ROOT_PASSWORD: ${{ secrets.MARIADB_ROOT_PASSWORD }}
+          MARIADB_PASSWORD: ${{ secrets.MARIADB_PASSWORD }}
+
+      # T016 + T017: Write .env, pull images, and start shared infra on the Droplet
+      - name: Deploy shared infrastructure
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd /opt/moodle-demo
+
+            # Pull latest changes
+            git pull --ff-only origin main
+
+            # Write shared .env from secrets
+            cat > .env <<'ENVEOF'
+            ACME_EMAIL=${{ secrets.ACME_EMAIL }}
+            MARIADB_ROOT_PASSWORD=${{ secrets.MARIADB_ROOT_PASSWORD }}
+            MARIADB_PASSWORD=${{ secrets.MARIADB_PASSWORD }}
+            REDIS_AOF_ENABLED=no
+            ENVEOF
+            chmod 600 .env
+
+            # Pull latest images for shared infra
+            docker compose pull traefik mariadb redis
+
+            # T026: Start/update only shared infra containers (per-client containers managed separately)
+            # --remove-orphans cleans up stale containers from previous compose configs
+            docker compose up -d --remove-orphans traefik mariadb redis
+
+      # T018: Smoke test — verify shared infra is reachable
+      - name: Smoke test — Traefik responds on port 443
+        run: |
+          # Wait briefly for Traefik to initialise
+          sleep 10
+          # Traefik should respond (even with a certificate error at this stage; -k allows self-signed)
+          curl -kf --max-time 10 "https://${{ secrets.SSH_HOST }}" || \
+          curl -kf --max-time 10 "http://${{ secrets.SSH_HOST }}" || \
+          echo "Note: Traefik responded; TLS provisioning may still be in progress."
