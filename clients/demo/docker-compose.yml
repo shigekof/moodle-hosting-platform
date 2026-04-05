@@ -6,6 +6,9 @@ name: moodle-demo
 services:
   moodle-demo:
     image: moodle-custom:latest
+    build:
+      context: ../../moodle
+      dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
       - clients/demo/.env
@@ -35,6 +38,9 @@ services:
 
   moodle-cron-demo:
     image: moodle-custom:latest
+    build:
+      context: ../../moodle
+      dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
       - clients/demo/.env
