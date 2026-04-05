@@ -7,13 +7,12 @@ name: moodle-demo
 
 services:
   moodle-${CLIENT_NAME}:
-    image: bitnami/moodle:4.3
+    image: moodle-custom:latest
     restart: unless-stopped
     env_file:
       - clients/${CLIENT_NAME}/.env
     volumes:
-      - moodle_${CLIENT_NAME_UNDER}_data:/bitnami/moodle
-      - moodledata_${CLIENT_NAME_UNDER}_data:/bitnami/moodledata
+      - moodledata_${CLIENT_NAME_UNDER}_data:/var/moodledata
     networks:
       - moodle_network
     depends_on:
@@ -22,7 +21,7 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8080/login/index.php"]
+      test: ["CMD", "curl", "-sf", "http://localhost/login/index.php"]
       interval: 30s
       timeout: 10s
       retries: 10
@@ -34,7 +33,31 @@ services:
       - "traefik.http.routers.moodle-${CLIENT_NAME}.tls=true"
       - "traefik.http.routers.moodle-${CLIENT_NAME}.tls.certresolver=letsencrypt"
       - "traefik.http.routers.moodle-${CLIENT_NAME}.middlewares=secure-headers@file"
-      - "traefik.http.services.moodle-${CLIENT_NAME}.loadbalancer.server.port=8080"
+      - "traefik.http.services.moodle-${CLIENT_NAME}.loadbalancer.server.port=80"
+
+  # Moodle cron — runs Moodle background tasks every minute (T027c)
+  moodle-cron-${CLIENT_NAME}:
+    image: moodle-custom:latest
+    restart: unless-stopped
+    env_file:
+      - clients/${CLIENT_NAME}/.env
+    volumes:
+      - moodledata_${CLIENT_NAME_UNDER}_data:/var/moodledata
+    networks:
+      - moodle_network
+    depends_on:
+      moodle-${CLIENT_NAME}:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        set -euo pipefail
+        /usr/local/bin/docker-entrypoint.sh true
+        echo "[cron] Starting Moodle cron loop for ${CLIENT_NAME}..."
+        while true; do
+          php /var/www/html/admin/cli/cron.php
+          sleep 60
+        done
 
   seed-${CLIENT_NAME}:
     build:
@@ -44,8 +67,7 @@ services:
     env_file:
       - clients/${CLIENT_NAME}/.env
     volumes:
-      - moodle_${CLIENT_NAME_UNDER}_data:/bitnami/moodle
-      - moodledata_${CLIENT_NAME_UNDER}_data:/bitnami/moodledata
+      - moodledata_${CLIENT_NAME_UNDER}_data:/var/moodledata
     networks:
       - moodle_network
     depends_on:
@@ -53,7 +75,6 @@ services:
         condition: service_healthy
 
 volumes:
-  moodle_${CLIENT_NAME_UNDER}_data:
   moodledata_${CLIENT_NAME_UNDER}_data:
 
 networks:

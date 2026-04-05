@@ -1,3 +1,113 @@
+# Best Practices: Building a Custom Moodle Docker Image (2026-04-04)
+
+## Why Build a Custom Moodle Image?
+- **Security**: Control over PHP extensions, OS packages, and patching.
+- **Performance**: Tune PHP/Apache for your workload.
+- **Reproducibility**: Pin Moodle, plugin, and dependency versions.
+- **Customization**: Pre-install themes, plugins, and config.
+- **Compliance**: Meet organizational or client requirements.
+
+## Official and Community References
+- [moodlehq/moodle-docker](https://github.com/moodlehq/moodle-docker) — Dev/test stack, not production-focused, but good for reference.
+- [moodlehq/moodle-php-apache](https://github.com/moodlehq/moodle-php-apache) — Base image for custom builds.
+- [Moodle Docker Docs](https://moodledev.io/docs/environment/docker) — Official guidance.
+
+## Best Practices
+
+### 1. Use a Minimal, Maintained Base Image
+- Start from an official PHP image (e.g. `php:8.2-apache`) or [moodlehq/moodle-php-apache](https://github.com/moodlehq/moodle-php-apache) for Moodle-specific tweaks.
+- Avoid outdated or unmaintained images (e.g. Bitnami legacy for production).
+- Use a specific tag, never `latest`.
+
+### 2. Install Only Required PHP Extensions
+- Use Moodle's [requirements](https://moodledev.io/docs/requirements) to install only needed extensions.
+- Use `docker-php-ext-install` and `pecl` for extra extensions (e.g. redis, intl, opcache).
+- Document all extensions in the Dockerfile.
+
+### 3. Pin Moodle and Plugin Versions
+- COPY or git-clone a specific Moodle version (e.g. 4.3.x).
+- Install plugins and themes at build time (from git or ZIPs), not at runtime.
+- Use `MOODLE_VERSION` and `PLUGIN_VERSION` build args for reproducibility.
+
+### 4. Configuration via Environment Variables
+- Use env vars for DB, Redis, SMTP, and site config.
+- Use a `config.php` template that reads from env vars (see [moodle-docker config.docker-template.php](https://github.com/moodlehq/moodle-docker/blob/main/config.docker-template.php)).
+- Never hard-code secrets in the image.
+
+### 5. Use Multi-Stage Builds for Clean Images
+- Build assets (e.g. SCSS, JS) in a builder stage, copy only needed files to final image.
+- Remove build tools and caches in the final image.
+
+### 6. Volume Management
+- Mount Moodle `moodledata` as a Docker volume (never in the image).
+- Optionally mount `config.php` and custom plugins as volumes for hot-reload in dev.
+
+### 7. Healthchecks and Logging
+- Add a Docker `HEALTHCHECK` (e.g. curl `/login/index.php`).
+- Configure Apache/PHP logs to stdout/stderr for Docker log collection.
+
+### 8. Security Hardening
+- Run as non-root where possible.
+- Remove build tools and package manager caches.
+- Keep OS and PHP up to date with security patches.
+- Disable dangerous PHP functions.
+
+### 9. Automated Testing
+- Use CI to build and test the image (install, upgrade, plugin checks).
+- Run Moodle CLI health checks in CI and as a container healthcheck.
+
+### 10. Documentation
+- Document all build args, env vars, and volumes in the Dockerfile and README.
+- Provide upgrade instructions for Moodle and plugins.
+
+## Example Dockerfile Pattern
+
+```Dockerfile
+FROM php:8.2-apache
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    libpng-dev libjpeg-dev libfreetype6-dev libzip-dev git unzip \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd zip mysqli opcache intl
+
+# Install extra PHP extensions (e.g. redis)
+RUN pecl install redis \
+    && docker-php-ext-enable redis
+
+# Set up Moodle
+ARG MOODLE_VERSION=4.3.3
+RUN git clone --branch v$MOODLE_VERSION --depth 1 https://github.com/moodle/moodle.git /var/www/html
+
+# Install plugins/themes (example)
+RUN git clone --branch v4.3.3 https://github.com/rodrigomuniz/moodle-theme_moove.git /var/www/html/theme/moove
+
+# Copy config template
+COPY config.docker-template.php /var/www/html/config.php
+
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html
+
+# Expose port
+EXPOSE 80
+
+# Healthcheck
+HEALTHCHECK CMD curl -f http://localhost/login/index.php || exit 1
+```
+
+## Upgrade Strategy
+- Rebuild the image for each Moodle release (security/feature updates).
+- Use build args for Moodle and plugin versions.
+- Automate plugin/theme updates in CI.
+
+## References
+- [Moodle Docker Docs](https://moodledev.io/docs/environment/docker)
+- [moodlehq/moodle-docker](https://github.com/moodlehq/moodle-docker)
+- [moodlehq/moodle-php-apache](https://github.com/moodlehq/moodle-php-apache)
+- [Official Moodle requirements](https://moodledev.io/docs/requirements)
+
+---
+
 # Research: Moodle Demo Site Deployment
 
 **Feature**: `001-moodle-demo-deployment`  
@@ -340,3 +450,82 @@ MOODLE_EXTRA_CONFIGPHP=$CFG->session_redis_prefix='moodle_{name}_session_';
 **Alternatives considered**:
 - Wildcard certificate (e.g., `*.demo.example.com`, clients on subdomains) \u2014 eliminates per-domain DNS setup but requires DNS-01 ACME challenge (needs DNS provider API key); adds complexity and constrains client domain choice.
 - Per-client subpaths (e.g., `demo.example.com/clientA`) \u2014 Moodle does not support path-prefix installation without code changes; separate domains is the correct approach.
+
+---
+
+# Alternative Production Stack: Debian + Nginx + PHP-FPM + Redis + Cron (2026-04-04)
+
+## Overview
+This stack is widely used for high-performance Moodle deployments:
+- **Debian**: Stable, secure, and well-supported for PHP and system packages.
+- **Nginx**: Fast, efficient web server and reverse proxy; excels at serving static files and proxying to PHP-FPM.
+- **PHP-FPM**: Modern, high-performance PHP process manager; better resource usage and concurrency than mod_php.
+- **Redis**: Used for Moodle sessions and MUC cache; improves speed and scalability.
+- **Cron**: Runs Moodle background tasks; essential for site health and automation.
+
+## Pros
+- Best performance and scalability for large/production Moodle sites
+- Lower memory usage and higher concurrency than Apache/mod_php
+- Fine-grained tuning of PHP and web server settings
+- Nginx config is flexible for SSL, caching, and security
+- Redis integration is first-class in Moodle
+
+## Cons
+- More complex to configure than Apache/mod_php
+- Nginx does not support .htaccess; all config must be in nginx.conf
+- Requires separate containers/services for Nginx, PHP-FPM, and cron
+- Fewer official Docker images; more DIY
+
+## Example Docker Compose Pattern
+
+```yaml
+services:
+  nginx:
+    image: nginx:1.26
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - moodle_www:/var/www/html:ro
+    depends_on:
+      - php
+    ports:
+      - "80:80"
+      - "443:443"
+
+  php:
+    image: php:8.2-fpm
+    volumes:
+      - moodle_www:/var/www/html
+    environment:
+      - MOODLE_DOCKER=1
+    # Install PHP extensions and Moodle in a custom Dockerfile
+
+  redis:
+    image: redis:7.2
+    volumes:
+      - redis_data:/data
+
+  cron:
+    image: php:8.2-cli
+    volumes:
+      - moodle_www:/var/www/html
+    entrypoint: ["/bin/sh", "-c", "while true; do php /var/www/html/admin/cli/cron.php; sleep 60; done"]
+    depends_on:
+      - php
+
+volumes:
+  moodle_www:
+  redis_data:
+```
+
+## Recommendation
+- For most small/medium deployments, Apache/mod_php (or moodle-php-apache) is simpler and easier to maintain.
+- For high-traffic, production, or multi-tenant sites, **Debian + Nginx + PHP-FPM + Redis + Cron** is the best-practice stack, but requires more DevOps expertise.
+- If you want a balance, start with Apache/mod_php for MVP, then migrate to Nginx/PHP-FPM as you scale.
+
+## About moodlehq/moodle-php-apache
+- Last updated: 10 months ago (as of 2026-04-04)
+- Not as actively maintained as core Moodle, but still used as a reference for Docker builds.
+- For long-term production, prefer building your own image from official Debian or PHP base images, following Moodle's requirements and security best practices.
+
+---
+_Last updated: 2026-04-04_

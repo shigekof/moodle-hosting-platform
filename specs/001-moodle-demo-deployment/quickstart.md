@@ -243,6 +243,22 @@ Repeat the provisioning step for each new client, substituting the correct name 
 Each client is fully isolated from the others. Provisioning one client has no effect on existing clients.
 ---
 
+## Phase 0 Update: Custom Moodle Image Quickstart (2026-04-04)
+
+## Image Build (New Step)
+- Build your own Moodle Docker image using official Debian and PHP images (e.g. `php:8.2-apache`).
+- Use Apache/mod_php for initial deployment (simpler for MVP).
+- Install required PHP extensions and Moodle at build time.
+- Pin Moodle and plugin versions for reproducibility.
+- See research.md for a sample Dockerfile and best practices.
+
+## Deployment Steps (Updated)
+- Replace Bitnami image references in docker-compose files with your custom image (e.g. `myorg/moodle:4.3.3-apache`).
+- Continue to use Traefik, MariaDB, and Redis as described.
+- All other steps remain the same.
+
+---
+
 ## Troubleshooting
 
 ### TLS Certificate Not Issuing

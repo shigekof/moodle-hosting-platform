@@ -131,3 +131,11 @@ An administrator pushes a change to the repository (e.g., updated theme configur
 - A compatible open-source Moodle theme (e.g., Boost-based or a well-maintained community theme) will be selected to satisfy the visual quality requirement; custom theme development from scratch is out of scope.
 - Each client’s domain must have a DNS A record pointing to the Droplet’s IP before the client container is started; Traefik requires port 80 reachability for Let’s Encrypt HTTP-01 certificate issuance per domain.
 - Client provisioning is a sequential operation — each new client’s Bitnami first-run initialisation must complete before the next client is provisioned; concurrent new-client provisioning is not supported.
+
+# Phase 0 Update: Custom Image Specification (2026-04-04)
+
+- The deployment will use a custom-built Moodle image based on official Debian and PHP images (php:8.2-apache), not Bitnami or legacy images.
+- Apache/mod_php will be used for initial deployment for simplicity and maintainability.
+- All required PHP extensions, Moodle version, and plugins/themes will be installed at build time.
+- Environment variables will be used for configuration (DB, Redis, SMTP, etc.).
+- This approach allows for future migration to Nginx/PHP-FPM if needed.

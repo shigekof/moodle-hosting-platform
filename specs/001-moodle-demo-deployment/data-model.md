@@ -330,3 +330,10 @@ clients/{name}/.env  (per-client)
 | `learner2` | Student | INTRO001, COLLAB001 | Demonstrate peer interactions (forums, assignments) |
 
 Passwords for `learner1` and `learner2` are set in `seed.sh` and documented in `quickstart.md` (default showcase passwords, reset before any public use).
+
+# Phase 0 Update: Data Model Impact of Custom Image (2026-04-04)
+
+- Moodle service will use a custom image built from official Debian/PHP with Apache/mod_php.
+- No change to MariaDB or Redis data model; volumes and per-client DBs remain as before.
+- moodledata remains a named Docker volume, not part of the image.
+- All configuration and secrets are injected via environment variables, not baked into the image.

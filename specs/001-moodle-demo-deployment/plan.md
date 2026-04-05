@@ -87,3 +87,26 @@ moodle-demo/
 ```
 
 **Structure Decision**: Multi-client infrastructure-as-code repository. Shared infrastructure (Traefik, MariaDB, Redis) lives in the root `docker-compose.yml`. Each client is isolated in its own `clients/{name}/` directory with a generated Compose service block. The root `docker-compose.yml` uses Docker Compose v2.20+ `include:` directives to assemble all client service files at deploy time. Dynamic client provisioning is handled by `scripts/add-client.sh`, which creates the database, generates `clients/{name}/docker-compose.yml` via `envsubst`, and starts the client's Moodle container and seed.
+
+# Phase 0 Update: Custom Moodle Image Strategy (2026-04-04)
+
+## Image Build Approach
+- Build a custom Moodle image based on official Debian and PHP images (e.g. `debian:12-slim` + `php:8.2-apache`).
+- Use Apache with mod_php for initial deployment (simpler, easier to maintain for MVP).
+- Install only required PHP extensions per Moodle requirements.
+- Pin Moodle version and pre-install required plugins/themes at build time.
+- Use Docker build args for reproducibility (Moodle version, plugin versions).
+- Use environment variables for DB, Redis, SMTP, and site config (never hard-code secrets).
+- Mount `moodledata` as a Docker volume (never in the image).
+- Document all build args, env vars, and volumes in the Dockerfile and README.
+
+## Rationale
+- Apache/mod_php is simpler for small/medium deployments and MVPs.
+- Official Debian/PHP images are well-maintained and secure.
+- This approach allows easy migration to Nginx/PHP-FPM in the future if needed.
+- Avoids Bitnami/legacy images for long-term maintainability.
+
+## Next Steps
+- Write a Dockerfile using `php:8.2-apache` as the base, installing Moodle and required extensions.
+- Update documentation and quickstart to reflect the new image build process.
+- Test the image locally and in CI before production deployment.

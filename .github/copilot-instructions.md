@@ -4,7 +4,7 @@ Auto-generated from all feature plans. Last updated: 2026-04-03
 
 ## Active Technologies
 
-- YAML (Docker Compose v2, GitHub Actions), Bash (seed + deploy scripts) + Traefik v3.1, Bitnami Moodle 4.3 (PHP 8.2), Bitnami MariaDB 10.11, Bitnami Redis 7.2, Moove theme 4.3+, moosh CLI (Moodle Shell) for seeding (001-moodle-demo-deployment)
+- YAML (Docker Compose v2, GitHub Actions), Bash (seed + deploy scripts) + Traefik v3.1, Bitnamilegacy Moodle 5.0.2 (PHP 8.2), Bitnamilegacy MariaDB 11.8.3, Bitnamilegacy Redis 7.2, Moove theme 4.3+, moosh CLI (Moodle Shell) for seeding (001-moodle-demo-deployment)
 - Multi-client Moodle: one container per client (`moodle-{name}`) all from `bitnami/moodle:4.3`; each client has a dedicated MariaDB database and named volumes; Redis is shared with per-client session key prefixes; Traefik routes by `Host()` per client domain; new clients provisioned via `scripts/add-client.sh`
 
 ## Project Structure

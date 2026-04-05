@@ -60,7 +60,27 @@ description: "Task list for Moodle Demo Site Deployment (multi-client, per-conta
 
 ---
 
-## Phase 5: User Story 3 - Administrator Updates Deployment via CI/CD (Priority: P3)
+## Phase 5: Custom Moodle Image (Official Debian/PHP, Apache/mod_php)
+
+**Goal**: Build and deploy a custom Moodle Docker image based on official Debian and PHP images, using Apache/mod_php for initial deployment.
+
+- [x] T026 Research and document best practices for custom Moodle image (see research.md)
+- [x] T027 Write Dockerfile using `php:8.2-apache` as base, install required PHP extensions, Moodle, and plugins/themes
+- [x] T027a Ensure all required and recommended PHP extensions for Moodle are installed (intl, soap, gd, zip, curl, mbstring, opcache, xsl, exif, sodium, ldap)
+- [x] T027b Install and enable the Redis PHP extension via pecl; configure Moodle for Redis sessions and MUC cache
+- [x] T027c Add and document a cron container/service to run Moodle's admin/cli/cron.php every minute
+- [x] T027d Set PHP and Apache config for large file uploads (upload_max_filesize=512M, post_max_size=512M, memory_limit=512M) in moodle/php.ini
+- [x] T027e Validate multi-client hosting: one container per client, per-client config, DB, moodledata, and Redis key prefix (MOODLE_SESSION_REDIS_PREFIX per client)
+- [x] T028 Pin Moodle and plugin/theme versions using build args (MOODLE_VERSION, MOOVE_BRANCH) in moodle/Dockerfile
+- [x] T029 Update docker-compose files to use the custom image instead of Bitnami
+- [ ] T030 Update quickstart.md and spec.md to document the new image build and deployment process
+- [ ] T031 Test the custom image locally (docker compose build && up, verify Moodle install and theme)
+- [ ] T032 Update GitHub Actions workflow to build/push the custom image and deploy it
+- [ ] T033 Document upgrade and maintenance process for the custom image
+
+---
+
+## Phase 5: Administrator Updates Deployment via CI/CD (Priority: P3)
 
 **Goal**: Admin can push changes to the repo and trigger zero-downtime rolling updates for affected containers only.
 

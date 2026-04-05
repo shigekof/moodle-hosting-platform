@@ -7,7 +7,7 @@ set -euo pipefail
 : "${CLIENT_NAME:?CLIENT_NAME is required}"
 : "${CLIENT_DOMAIN:?CLIENT_DOMAIN is required}"
 
-MOODLE_DIR="/bitnami/moodle"
+MOODLE_DIR="/var/www/html"
 MOOSH="moosh -n -p ${MOODLE_DIR}"
 
 log() { echo "[seed] $*"; }
