@@ -1,7 +1,7 @@
 ---
 name: Lint
 
-on:
+"on":
   pull_request:
     branches:
       - main
@@ -67,7 +67,8 @@ jobs:
             --standard WCAG2AA \
             --threshold 0
 
-  # T030: Lighthouse CI performance baseline — runs on schedule or manual trigger
+  # T030: Lighthouse CI performance baseline
+  # runs on schedule or manual trigger
   lighthouse:
     name: Lighthouse CI
     runs-on: ubuntu-latest

@@ -123,13 +123,13 @@ create_course_if_missing() {
     fi
 }
 
-COURSE1_ID=$(create_course_if_missing \
+create_course_if_missing \
     "INTRO-ONLINE-${CLIENT_NAME}" \
-    "Introduction to Online Learning")
+    "Introduction to Online Learning" > /dev/null
 
-COURSE2_ID=$(create_course_if_missing \
+create_course_if_missing \
     "DIGITAL-COLLAB-${CLIENT_NAME}" \
-    "Digital Collaboration Tools")
+    "Digital Collaboration Tools" > /dev/null
 
 # ---------------------------------------------------------------------------
 # 9. Enrol demo users in both courses

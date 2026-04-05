@@ -79,3 +79,19 @@ jobs:
           curl -kf --max-time 10 "https://${{ secrets.SSH_HOST }}" || \
           curl -kf --max-time 10 "http://${{ secrets.SSH_HOST }}" || \
           echo "Note: Traefik responded; TLS provisioning may still be in progress."
+
+      # Deploy demo client containers
+      - name: Deploy demo client
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd /opt/moodle-demo
+            # Pull latest images for demo client (if needed)
+            docker compose -f clients/demo/docker-compose.yml pull || true
+            # Start/update demo client containers
+            docker compose -f clients/demo/docker-compose.yml up -d --remove-orphans
