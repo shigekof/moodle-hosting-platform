@@ -1,0 +1,79 @@
+# Generated docker-compose for demo client
+# Do not edit directly. Generated from _template/docker-compose.yml.tpl
+
+name: moodle-demo
+
+services:
+  moodle-demo:
+    image: moodle-custom:latest
+    restart: unless-stopped
+    env_file:
+      - clients/demo/.env
+    volumes:
+      - moodledata_demo_data:/var/moodledata
+    networks:
+      - moodle_network
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost/login/index.php"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 300s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.moodle-demo.rule=Host(`demo.example.com`)"
+      - "traefik.http.routers.moodle-demo.entrypoints=websecure"
+      - "traefik.http.routers.moodle-demo.tls=true"
+      - "traefik.http.routers.moodle-demo.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.moodle-demo.middlewares=secure-headers@file"
+      - "traefik.http.services.moodle-demo.loadbalancer.server.port=80"
+
+  moodle-cron-demo:
+    image: moodle-custom:latest
+    restart: unless-stopped
+    env_file:
+      - clients/demo/.env
+    volumes:
+      - moodledata_demo_data:/var/moodledata
+    networks:
+      - moodle_network
+    depends_on:
+      moodle-demo:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        set -euo pipefail
+        /usr/local/bin/docker-entrypoint.sh true
+        echo "[cron] Starting Moodle cron loop for demo..."
+        while true; do
+          php /var/www/html/admin/cli/cron.php
+          sleep 60
+        done
+
+  seed-demo:
+    build:
+      context: ./seed
+      dockerfile: Dockerfile
+    restart: "no"
+    env_file:
+      - clients/demo/.env
+    volumes:
+      - moodledata_demo_data:/var/moodledata
+    networks:
+      - moodle_network
+    depends_on:
+      moodle-demo:
+        condition: service_healthy
+
+volumes:
+  moodledata_demo_data:
+
+networks:
+  moodle_network:
+    external: true

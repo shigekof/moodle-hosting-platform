@@ -1,0 +1,46 @@
+---
+# Traefik v3.1 static configuration
+# See: https://doc.traefik.io/traefik/
+
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+
+  websecure:
+    address: ":443"
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: "${ACME_EMAIL}"
+      storage: /letsencrypt/acme.json
+      httpChallenge:
+        entryPoint: web
+
+providers:
+  docker:
+    exposedByDefault: false
+    network: moodle_network
+
+# Security: dashboard disabled to prevent information disclosure (OWASP A05)
+api:
+  dashboard: false
+
+# Security headers middleware — applied to all Moodle routers via router label
+http:
+  middlewares:
+    secure-headers:
+      headers:
+        frameDeny: true
+        contentTypeNosniff: true
+        referrerPolicy: "strict-origin-when-cross-origin"
+        permissionsPolicy: "camera=(), microphone=(), geolocation=()"
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        stsPreload: true

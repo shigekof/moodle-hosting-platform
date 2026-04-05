@@ -1,0 +1,16 @@
+# Git metadata
+.git/
+
+# Secrets
+.env
+clients/*/.env
+
+# Docs and specs (not needed in image)
+specs/
+.specify/
+.vscode/
+README.md
+.github/
+
+# Logs
+*.log

@@ -1,0 +1,136 @@
+---
+# Local development — no Traefik, Moodle accessible at http://localhost:8080
+#
+# Usage:
+#   cp .env.local.example .env.local
+#   # Edit .env.local and set passwords
+#   docker compose -f docker-compose.local.yml --env-file .env.local up -d
+#   docker compose -f docker-compose.local.yml --env-file .env.local logs -f moodle
+#
+# First boot takes ~5 minutes. Open http://localhost:8080 when healthy.
+
+name: moodle-local
+
+services:
+  mariadb:
+    image: mariadb:11.8
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: moodle_local
+      MARIADB_USER: moodle
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+    volumes:
+      - local_mariadb_data:/var/lib/mysql
+    networks:
+      - local_network
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  redis:
+    image: redis:7.2
+    restart: unless-stopped
+    volumes:
+      - local_redis_data:/data
+    networks:
+      - local_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  moodle:
+    build:
+      context: ./moodle
+      dockerfile: Dockerfile
+    image: moodle-custom:local
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      MOODLE_DATABASE_HOST: mariadb
+      MOODLE_DATABASE_PORT_NUMBER: 3306
+      MOODLE_DATABASE_USER: moodle
+      MOODLE_DATABASE_PASSWORD: ${MARIADB_PASSWORD}
+      MOODLE_DATABASE_NAME: moodle_local
+      MOODLE_WWWROOT: http://localhost:8080
+      MOODLE_USERNAME: ${MOODLE_USERNAME:-admin}
+      MOODLE_PASSWORD: ${MOODLE_PASSWORD}
+      MOODLE_EMAIL: ${MOODLE_EMAIL:-admin@example.com}
+      MOODLE_SITE_NAME: ${MOODLE_SITE_NAME:-Local Moodle}
+      MOODLE_REDIS_HOST: redis
+      MOODLE_REDIS_PORT: 6379
+      MOODLE_SESSION_REDIS_PREFIX: moodle_local_session_
+    volumes:
+      - local_moodledata_data:/var/moodledata
+    networks:
+      - local_network
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost/login/index.php"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 300s
+
+  # Moodle cron — runs Moodle background tasks every minute (T027c)
+  moodle-cron:
+    build:
+      context: ./moodle
+      dockerfile: Dockerfile
+    image: moodle-custom:local
+    restart: unless-stopped
+    environment:
+      MOODLE_DATABASE_HOST: mariadb
+      MOODLE_DATABASE_PORT_NUMBER: 3306
+      MOODLE_DATABASE_USER: moodle
+      MOODLE_DATABASE_PASSWORD: ${MARIADB_PASSWORD}
+      MOODLE_DATABASE_NAME: moodle_local
+      MOODLE_WWWROOT: http://localhost:8080
+      MOODLE_REDIS_HOST: redis
+      MOODLE_REDIS_PORT: 6379
+      MOODLE_SESSION_REDIS_PREFIX: moodle_local_session_
+      MOODLE_USERNAME: ${MOODLE_USERNAME:-admin}
+      MOODLE_PASSWORD: ${MOODLE_PASSWORD}
+      MOODLE_EMAIL: ${MOODLE_EMAIL:-admin@example.com}
+      MOODLE_SITE_NAME: ${MOODLE_SITE_NAME:-Local Moodle}
+    volumes:
+      - local_moodledata_data:/var/moodledata
+    networks:
+      - local_network
+    depends_on:
+      moodle:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        set -euo pipefail
+        # Generate config.php using same entrypoint logic then loop cron
+        /usr/local/bin/docker-entrypoint.sh true
+        echo "[cron] Starting Moodle cron loop..."
+        while true; do
+          php /var/www/html/admin/cli/cron.php
+          sleep 60
+        done
+
+volumes:
+  local_mariadb_data:
+  local_redis_data:
+  local_moodledata_data:
+
+networks:
+  local_network:
+    driver: bridge

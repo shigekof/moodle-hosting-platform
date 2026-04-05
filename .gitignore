@@ -1,0 +1,17 @@
+# Secrets and credentials — never commit
+.env
+clients/*/.env
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/settings.json
+*.swp
+*.tmp
+
+# Logs
+*.log
+
+# Traefik ACME certificate store (auto-generated, not for version control)
+traefik/acme.json
