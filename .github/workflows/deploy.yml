@@ -88,6 +88,24 @@ jobs:
             "http://${{ secrets.SSH_HOST }}" || \
           echo "Note: Traefik responded; TLS provisioning may still be in progress."
 
+      # Ensure demo client .env exists, else run add-client.sh
+      - name: Ensure demo client .env
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd /opt/moodle-hosting-platform
+            if [[ ! -f clients/demo/.env ]]; then
+              echo '==> .env for demo client not found, running add-client.sh...'
+              ./scripts/add-client.sh demo demo.example.com
+            else
+              echo '==> .env for demo client already exists.'
+            fi
+
       # Deploy demo client containers
       - name: Deploy demo client
         uses: appleboy/ssh-action@v1.0.3
@@ -101,5 +119,7 @@ jobs:
             cd /opt/moodle-hosting-platform
             # Pull latest images for demo client (if needed)
             docker compose -f docker-compose.yml -f clients/demo/docker-compose.yml pull || true
+            # Build demo client containers (for moodle-custom:latest)
+            docker compose -f docker-compose.yml -f clients/demo/docker-compose.yml build
             # Start/update demo client containers
-            docker compose -f docker-compose.yml -f clients/demo/docker-compose.yml up -d --remove-orphans    
+            docker compose -f docker-compose.yml -f clients/demo/docker-compose.yml up -d --remove-orphans
