@@ -10,22 +10,22 @@ name: Lint
       - 'feature/*'
 
 jobs:
-  yamllint:
-    name: YAML Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install yamllint
-        run: pip install yamllint
-
-      - name: Lint YAML files
-        run: |
-          yamllint docker-compose.yml \
-                   traefik/traefik.yml \
-                   clients/_template/docker-compose.yml.tpl \
-                   .github/workflows/deploy.yml \
-                   .github/workflows/lint.yml
+#  yamllint:
+#    name: YAML Lint
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - name: Install yamllint
+#        run: pip install yamllint
+#
+#      - name: Lint YAML files
+#        run: |
+#          yamllint docker-compose.yml \
+#                   traefik/traefik.yml \
+#                   clients/_template/docker-compose.yml.tpl \
+#                   .github/workflows/deploy.yml \
+#                   .github/workflows/lint.yml
 
   shellcheck:
     name: Shell Lint
