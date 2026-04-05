@@ -100,8 +100,6 @@ jobs:
             set -euo pipefail
             cd /opt/moodle-hosting-platform
             # Pull latest images for demo client (if needed)
-            docker compose -f clients/demo/docker-compose.yml pull || true
+            docker compose -f docker-compose.yml -f clients/demo/docker-compose.yml pull || true
             # Start/update demo client containers
-            docker compose -f \
-              clients/demo/docker-compose.yml \
-              up -d --remove-orphans
+            docker compose -f docker-compose.yml -f clients/demo/docker-compose.yml up -d --remove-orphans    

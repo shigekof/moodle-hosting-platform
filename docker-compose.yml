@@ -3,7 +3,7 @@
 # Per-client Moodle services are assembled via include: directives below.
 # Add a new client by running: scripts/add-client.sh <name> <domain>
 
-name: moodle-demo
+name: moodle-hosting-platform
 
 services:
   traefik:
