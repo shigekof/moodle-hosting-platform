@@ -51,7 +51,7 @@ jobs:
           script_stop: true
           script: |
             set -euo pipefail
-            cd /opt/moodle-demo
+            cd /opt/moodle-hosting-platform
 
             # Pull latest changes
             git pull --ff-only origin main
@@ -92,7 +92,7 @@ jobs:
           script_stop: true
           script: |
             set -euo pipefail
-            cd /opt/moodle-demo
+            cd /opt/moodle-hosting-platform
             # Pull latest images for demo client (if needed)
             docker compose -f clients/demo/docker-compose.yml pull || true
             # Start/update demo client containers
