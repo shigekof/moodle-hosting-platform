@@ -23,8 +23,10 @@ jobs:
       - name: Validate required secrets
         shell: bash
         run: |
-          required_vars=(SSH_HOST SSH_USERNAME SSH_PRIVATE_KEY ACME_EMAIL
-                         MARIADB_ROOT_PASSWORD MARIADB_PASSWORD)
+          required_vars=(
+            SSH_HOST SSH_USERNAME SSH_PRIVATE_KEY ACME_EMAIL \
+            MARIADB_ROOT_PASSWORD MARIADB_PASSWORD
+          )
           for var in "${required_vars[@]}"; do
             if [[ -z "${!var:-}" ]]; then
               echo "ERROR: secret ${var} is not set"
@@ -77,8 +79,8 @@ jobs:
           sleep 10
           # Traefik should respond (even with a certificate error at this stage; -k allows self-signed)
           curl -kf --max-time 10 "https://${{ secrets.SSH_HOST }}" || \
-          curl -kf --max-time 10 "http://${{ secrets.SSH_HOST }}" || \
-          echo "Note: Traefik responded; TLS provisioning may still be in progress."
+            curl -kf --max-time 10 "http://${{ secrets.SSH_HOST }}" || \
+            echo "Note: Traefik responded; TLS provisioning may still be in progress."
 
       # Deploy demo client containers
       - name: Deploy demo client
@@ -94,4 +96,5 @@ jobs:
             # Pull latest images for demo client (if needed)
             docker compose -f clients/demo/docker-compose.yml pull || true
             # Start/update demo client containers
-            docker compose -f clients/demo/docker-compose.yml up -d --remove-orphans
+            docker compose -f clients/demo/docker-compose.yml up -d \
+              --remove-orphans

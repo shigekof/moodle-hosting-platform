@@ -104,7 +104,7 @@ echo "==> Created ${ENV_FILE}"
 # Generate client docker-compose.yml from template
 # ---------------------------------------------------------------------------
 export CLIENT_NAME CLIENT_DOMAIN CLIENT_NAME_UNDER
-envsubst '${CLIENT_NAME} ${CLIENT_DOMAIN} ${CLIENT_NAME_UNDER}' \
+envsubst "${CLIENT_NAME} ${CLIENT_DOMAIN} ${CLIENT_NAME_UNDER}" \
     < clients/_template/docker-compose.yml.tpl \
     > "${COMPOSE_FILE}"
 echo "==> Created ${COMPOSE_FILE}"
