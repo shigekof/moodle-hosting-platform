@@ -27,20 +27,10 @@ providers:
   docker:
     exposedByDefault: false
     network: moodle_network
+  file:
+    filename: /etc/traefik/dynamic.yml
+    watch: true
 
 # Security: dashboard disabled to prevent information disclosure (OWASP A05)
 api:
   dashboard: false
-
-# Security headers middleware — applied to all Moodle routers via router label
-http:
-  middlewares:
-    secure-headers:
-      headers:
-        frameDeny: true
-        contentTypeNosniff: true
-        referrerPolicy: "strict-origin-when-cross-origin"
-        permissionsPolicy: "camera=(), microphone=(), geolocation=()"
-        stsSeconds: 31536000
-        stsIncludeSubdomains: true
-        stsPreload: true

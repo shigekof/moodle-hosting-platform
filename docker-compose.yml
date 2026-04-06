@@ -16,6 +16,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik_certs:/letsencrypt
       - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL}
     networks:
       - moodle_network
     labels:
