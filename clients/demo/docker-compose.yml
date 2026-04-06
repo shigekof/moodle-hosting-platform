@@ -7,11 +7,11 @@ services:
   moodle-demo:
     image: moodle-custom:latest
     build:
-      context: moodle
+      context: ../../moodle
       dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
-      - clients/demo/.env
+      - .env
     volumes:
       - moodledata_demo_data:/var/moodledata
     networks:
@@ -39,11 +39,11 @@ services:
   moodle-cron-demo:
     image: moodle-custom:latest
     build:
-      context: moodle
+      context: ../../moodle
       dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
-      - clients/demo/.env
+      - .env
     volumes:
       - moodledata_demo_data:/var/moodledata
     networks:
@@ -64,11 +64,11 @@ services:
 
   seed-demo:
     build:
-      context: seed
+      context: ../../seed
       dockerfile: Dockerfile
     restart: "no"
     env_file:
-      - clients/demo/.env
+      - .env
     volumes:
       - moodledata_demo_data:/var/moodledata
     networks:
