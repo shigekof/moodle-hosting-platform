@@ -167,11 +167,14 @@ jobs:
           script: |
             set -euo pipefail
             cd /opt/moodle-hosting-platform
+            echo '==> .env contents (masked):'
+            grep -v PASSWORD clients/demo/.env || true
             # Build moodle-custom:latest from source (local image, not on Docker Hub)
             docker compose -f docker-compose.yml -f clients/demo/docker-compose.yml build moodle-demo moodle-cron-demo seed-demo
-            # Start moodle-demo and capture logs on failure
-            docker compose -f docker-compose.yml -f clients/demo/docker-compose.yml up -d moodle-demo moodle-cron-demo || {
+            # Start moodle-demo only — moodle-cron-demo depends on it being healthy (slow first install)
+            docker compose -f docker-compose.yml -f clients/demo/docker-compose.yml up -d moodle-demo || {
               echo '==> moodle-demo failed to start. Container logs:'
-              docker compose -f docker-compose.yml -f clients/demo/docker-compose.yml logs --tail=50 moodle-demo
+              docker compose -f docker-compose.yml -f clients/demo/docker-compose.yml logs --tail=80 moodle-demo
               exit 1
             }
+            echo '==> moodle-demo container is up. First install may take 10-15 min to become healthy.'
