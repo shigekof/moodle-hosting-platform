@@ -45,6 +45,32 @@ jobs:
           MARIADB_ROOT_PASSWORD: ${{ secrets.MARIADB_ROOT_PASSWORD }}
           MARIADB_PASSWORD: ${{ secrets.MARIADB_PASSWORD }}
 
+      # Ensure repository and all required subdirectories exist on the server
+      - name: Ensure repository is present on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            # Clone if the repo directory itself is missing
+            if [[ ! -d /opt/moodle-hosting-platform ]]; then
+              echo '==> /opt/moodle-hosting-platform not found. Cloning repository...'
+              git clone https://github.com/shigekof/moodle-hosting-platform.git /opt/moodle-hosting-platform
+            fi
+            cd /opt/moodle-hosting-platform
+            # Reclone if required subdirectories are missing
+            if [[ ! -d moodle || ! -d clients ]]; then
+              echo '==> One or more required directories missing. Recloning repository...'
+              cd /opt
+              rm -rf moodle-hosting-platform || true
+              git clone https://github.com/shigekof/moodle-hosting-platform.git moodle-hosting-platform
+            else
+              echo '==> Repository and required directories exist.'
+            fi
+
       # T016 + T017: Write .env, pull images, and start shared infra on the Droplet
       - name: Deploy shared infrastructure
         uses: appleboy/ssh-action@v1.0.3
@@ -87,37 +113,6 @@ jobs:
           curl -kf --max-time 10 \
             "http://${{ secrets.SSH_HOST }}" || \
           echo "Note: Traefik responded; TLS provisioning may still be in progress."
-
-
-      # Ensure all required subdirectories exist (moodle, clients/demo)
-      - name: Ensure required subdirectories exist
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script_stop: true
-          script: |
-            set -euo pipefail
-            cd /opt/moodle-hosting-platform
-            missing=0
-            if [[ ! -d moodle ]]; then
-              echo '==> moodle directory missing!'
-              missing=1
-            fi
-            if [[ ! -d clients/demo ]]; then
-              echo '==> clients/demo directory missing!'
-              missing=1
-            fi
-            if [[ $missing -eq 1 ]]; then
-              echo '==> One or more required directories missing. Recloning repository...'
-              cd /opt
-              rm -rf moodle-hosting-platform || true
-              git clone https://github.com/shigekof/moodle-hosting-platform.git
-              cd /opt/moodle-hosting-platform
-            else
-              echo '==> All required directories exist.'
-            fi
 
       # Ensure demo client .env exists, else run add-client.sh
       - name: Ensure demo client .env
