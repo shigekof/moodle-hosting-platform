@@ -9,11 +9,11 @@ services:
   moodle-${CLIENT_NAME}:
     image: moodle-custom:latest
     build:
-      context: moodle
+      context: ../../moodle
       dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
-      - clients/${CLIENT_NAME}/.env
+      - .env
     volumes:
       - moodledata_${CLIENT_NAME_UNDER}_data:/var/moodledata
     networks:
@@ -42,11 +42,11 @@ services:
   moodle-cron-${CLIENT_NAME}:
     image: moodle-custom:latest
     build:
-      context: moodle
+      context: ../../moodle
       dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
-      - clients/${CLIENT_NAME}/.env
+      - .env
     volumes:
       - moodledata_${CLIENT_NAME_UNDER}_data:/var/moodledata
     networks:
@@ -67,11 +67,11 @@ services:
 
   seed-${CLIENT_NAME}:
     build:
-      context: seed
+      context: ../../seed
       dockerfile: Dockerfile
     restart: "no"
     env_file:
-      - clients/${CLIENT_NAME}/.env
+      - .env
     volumes:
       - moodledata_${CLIENT_NAME_UNDER}_data:/var/moodledata
     networks:
