@@ -58,7 +58,7 @@ jobs:
             # Clone if the repo directory itself is missing
             if [[ ! -d /opt/moodle-hosting-platform ]]; then
               echo '==> /opt/moodle-hosting-platform not found. Cloning repository...'
-              git clone https://github.com/shigekof/moodle-hosting-platform.git /opt/moodle-hosting-platform
+              git clone git@github.com:shigekof/moodle-hosting-platform.git /opt/moodle-hosting-platform
             fi
             cd /opt/moodle-hosting-platform
             # Reclone if required subdirectories are missing
@@ -66,7 +66,7 @@ jobs:
               echo '==> One or more required directories missing. Recloning repository...'
               cd /opt
               rm -rf moodle-hosting-platform || true
-              git clone https://github.com/shigekof/moodle-hosting-platform.git moodle-hosting-platform
+              git clone git@github.com:shigekof/moodle-hosting-platform.git moodle-hosting-platform
             else
               echo '==> Repository and required directories exist.'
             fi
