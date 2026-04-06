@@ -61,7 +61,7 @@ services:
         echo "[cron] Starting Moodle cron loop for demo..."
         while true; do
           php /var/www/html/admin/cli/cron.php
-          sleep 60
+          sleep 300
         done
 
   seed-demo:

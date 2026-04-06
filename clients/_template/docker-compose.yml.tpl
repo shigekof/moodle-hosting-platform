@@ -64,7 +64,7 @@ services:
         echo "[cron] Starting Moodle cron loop for ${CLIENT_NAME}..."
         while true; do
           php /var/www/html/admin/cli/cron.php
-          sleep 60
+          sleep 300
         done
 
   seed-${CLIENT_NAME}:
