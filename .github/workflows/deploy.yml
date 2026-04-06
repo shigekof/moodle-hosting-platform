@@ -168,6 +168,6 @@ jobs:
             set -euo pipefail
             cd /opt/moodle-hosting-platform
             # Build moodle-custom:latest from source (local image, not on Docker Hub)
-            docker compose -f docker-compose.yml -f clients/demo/docker-compose.yml build
-            # Start/update demo client containers
-            docker compose -f docker-compose.yml -f clients/demo/docker-compose.yml up -d --remove-orphans
+            docker compose -f docker-compose.yml -f clients/demo/docker-compose.yml build moodle-demo moodle-cron-demo seed-demo
+            # Start/update only the client-specific containers (shared infra managed separately)
+            docker compose -f docker-compose.yml -f clients/demo/docker-compose.yml up -d moodle-demo moodle-cron-demo
