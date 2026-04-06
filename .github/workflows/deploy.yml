@@ -55,34 +55,13 @@ jobs:
           script_stop: true
           script: |
             set -euo pipefail
-            echo "==> whoami: $(whoami)"
-            echo "==> HOME: $HOME"
-            echo "==> SSH key files: $(ls -la ~/.ssh/ 2>&1 || echo 'no .ssh dir')"
-            echo "==> git version: $(git --version)"
-            export GIT_SSH_COMMAND="ssh -i /root/.ssh/id_ed25519 -o StrictHostKeyChecking=no -v"
-            echo "==> GIT_SSH_COMMAND set: $GIT_SSH_COMMAND"
-            # Clone if the repo directory itself is missing
-            if [[ ! -d /opt/moodle-hosting-platform ]]; then
-              echo '==> /opt/moodle-hosting-platform not found. Cloning repository...'
-              git clone git@github.com:shigekof/moodle-hosting-platform.git /opt/moodle-hosting-platform
-              echo "==> Clone exit code: $?"
-            else
-              echo '==> /opt/moodle-hosting-platform already exists.'
+            if [[ ! -d /opt/moodle-hosting-platform/.git ]]; then
+              echo "ERROR: /opt/moodle-hosting-platform is not a git repository."
+              echo "Please run this manually on the server first:"
+              echo "  git clone git@github.com:shigekof/moodle-hosting-platform.git /opt/moodle-hosting-platform"
+              exit 1
             fi
-            cd /opt/moodle-hosting-platform
-            echo "==> Contents of /opt/moodle-hosting-platform: $(ls -la)"
-            # Reclone if required subdirectories are missing
-            if [[ ! -d moodle || ! -d clients ]]; then
-              echo '==> One or more required directories missing. Recloning repository...'
-              echo "==> moodle exists: $(test -d moodle && echo yes || echo no)"
-              echo "==> clients exists: $(test -d clients && echo yes || echo no)"
-              cd /opt
-              rm -rf moodle-hosting-platform || true
-              git clone git@github.com:shigekof/moodle-hosting-platform.git moodle-hosting-platform
-              echo "==> Reclone exit code: $?"
-            else
-              echo '==> Repository and required directories exist.'
-            fi
+            echo "==> Repository exists."
 
       # T016 + T017: Write .env, pull images, and start shared infra on the Droplet
       - name: Deploy shared infrastructure
