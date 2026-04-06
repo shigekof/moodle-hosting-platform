@@ -18,7 +18,7 @@ entryPoints:
 certificatesResolvers:
   letsencrypt:
     acme:
-      email: "${ACME_EMAIL}"
+      # email is set via TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_EMAIL env var
       storage: /letsencrypt/acme.json
       httpChallenge:
         entryPoint: web
