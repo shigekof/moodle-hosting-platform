@@ -55,6 +55,8 @@ jobs:
           script_stop: true
           script: |
             set -euo pipefail
+            # Ensure GitHub's host key is trusted (prevents interactive prompt on first clone)
+            ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null
             # Clone if the repo directory itself is missing
             if [[ ! -d /opt/moodle-hosting-platform ]]; then
               echo '==> /opt/moodle-hosting-platform not found. Cloning repository...'
