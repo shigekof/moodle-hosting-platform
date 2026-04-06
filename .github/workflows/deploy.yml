@@ -95,6 +95,9 @@ jobs:
             # --remove-orphans cleans up stale containers from previous compose configs
             docker compose up -d --remove-orphans traefik mariadb redis
 
+            # Ensure the shared moodle_network exists for per-client containers
+            docker network create moodle_network || true
+
       # T018: Smoke test — verify shared infra is reachable
       - name: Smoke test — Traefik responds on port 443
         run: |
