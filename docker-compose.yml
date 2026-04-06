@@ -58,8 +58,8 @@ services:
       start_period: 10s
 
 # --- Per-client includes (added by scripts/add-client.sh) ---
-# include:
-#   - clients/acme-corp/docker-compose.yml
+include:
+  - clients/demo/docker-compose.yml
 
 volumes:
   mariadb_data:
