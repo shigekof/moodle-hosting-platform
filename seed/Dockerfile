@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install moosh (Moodle Shell) via Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
-    && composer global require moodlehq/moosh \
+    && composer global require moodlehq/moosh --stability=dev \
     && ln -s /root/.composer/vendor/bin/moosh /usr/local/bin/moosh
 
 COPY seed.sh /usr/local/bin/seed.sh
