@@ -136,9 +136,7 @@ jobs:
           script: |
             set -euo pipefail
             cd /opt/moodle-hosting-platform
-            # Pull latest images for demo client (if needed)
-            docker compose -f docker-compose.yml -f clients/demo/docker-compose.yml pull || true
-            # Build demo client containers (for moodle-custom:latest)
+            # Build moodle-custom:latest from source (local image, not on Docker Hub)
             docker compose -f docker-compose.yml -f clients/demo/docker-compose.yml build
             # Start/update demo client containers
             docker compose -f docker-compose.yml -f clients/demo/docker-compose.yml up -d --remove-orphans
