@@ -107,7 +107,7 @@ jobs:
             "http://${{ secrets.SSH_HOST }}" || \
           echo "Note: Traefik responded; TLS provisioning may still be in progress."
 
-      # Ensure demo client .env exists, else run add-client.sh
+      # Ensure demo client .env exists (create it if missing)
       - name: Ensure demo client .env
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -118,12 +118,40 @@ jobs:
           script: |
             set -euo pipefail
             cd /opt/moodle-hosting-platform
-            if [[ ! -f clients/demo/.env ]]; then
-              echo '==> .env for demo client not found, running add-client.sh...'
-              ./scripts/add-client.sh demo demo.example.com
-            else
-              echo '==> .env for demo client already exists.'
+            if [[ -f clients/demo/.env ]]; then
+              echo '==> clients/demo/.env already exists.'
+              exit 0
             fi
+            echo '==> clients/demo/.env not found, generating...'
+            mkdir -p clients/demo
+            MOODLE_PASSWORD="$(openssl rand -hex 16)"
+            cat > clients/demo/.env <<ENVEOF
+            CLIENT_NAME=demo
+            CLIENT_DOMAIN=demo.example.com
+
+            MOODLE_USERNAME=admin
+            MOODLE_PASSWORD=${MOODLE_PASSWORD}
+            MOODLE_EMAIL=admin@demo.example.com
+            MOODLE_SITE_NAME=Demo Learning
+            MOODLE_HOST=demo.example.com
+
+            MOODLE_DATABASE_HOST=mariadb
+            MOODLE_DATABASE_PORT_NUMBER=3306
+            MOODLE_DATABASE_USER=moodle
+            MOODLE_DATABASE_PASSWORD=${{ secrets.MARIADB_PASSWORD }}
+            MOODLE_DATABASE_NAME=moodle_demo
+
+            MOODLE_EXTRA_CONFIGPHP=<?php \$CFG->session_handler_class = '\core\session\redis'; \$CFG->session_redis_host = 'redis'; \$CFG->session_redis_port = 6379; \$CFG->session_redis_prefix = 'moodle_demo_session_'; \$CFG->session_redis_acquire_lock_timeout = 120; \$CFG->session_redis_lock_expire = 7200;
+            ENVEOF
+            chmod 600 clients/demo/.env
+            echo '==> clients/demo/.env created.'
+            echo '==> Creating moodle_demo database...'
+            docker compose exec mariadb \
+              mysql -uroot -p"${{ secrets.MARIADB_ROOT_PASSWORD }}" \
+              -e "CREATE DATABASE IF NOT EXISTS \`moodle_demo\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+                  GRANT ALL PRIVILEGES ON \`moodle_demo\`.* TO 'moodle'@'%';
+                  FLUSH PRIVILEGES;"
+            echo '==> Database moodle_demo ready.'
 
       # Deploy demo client containers
       - name: Deploy demo client
