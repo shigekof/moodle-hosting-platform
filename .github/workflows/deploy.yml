@@ -149,7 +149,8 @@ jobs:
             chmod 600 clients/demo/.env
             echo '==> clients/demo/.env created.'
             echo '==> Creating moodle_demo database...'
-            docker compose exec mariadb \
+            MARIADB_CONTAINER="$(docker ps --filter name=mariadb --format '{{.Names}}' | head -1)"
+            docker exec "${MARIADB_CONTAINER}" \
               mariadb -uroot -p"${{ secrets.MARIADB_ROOT_PASSWORD }}" \
               -e "CREATE DATABASE IF NOT EXISTS \`moodle_demo\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
                   GRANT ALL PRIVILEGES ON \`moodle_demo\`.* TO 'moodle'@'%';
