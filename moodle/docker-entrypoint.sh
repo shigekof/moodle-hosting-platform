@@ -79,6 +79,9 @@ global \$CFG;
 \$CFG->dataroot = '${MOODLE_DATA_DIR}';
 \$CFG->admin    = 'admin';
 
+// Required when Moodle sits behind an SSL-terminating reverse proxy (Traefik)
+\$CFG->sslproxy = true;
+
 \$CFG->directorypermissions = 02777;
 
 // Redis session handler (T027b)

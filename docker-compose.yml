@@ -19,6 +19,7 @@ services:
       - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
     environment:
       ACME_EMAIL: ${ACME_EMAIL}
+      TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_EMAIL: ${ACME_EMAIL}
     networks:
       - moodle_network
     labels:
