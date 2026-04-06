@@ -130,13 +130,13 @@ jobs:
             MOODLE_PASSWORD="$(openssl rand -hex 16)"
             {
               printf 'CLIENT_NAME=demo\n'
-              printf 'CLIENT_DOMAIN=demo.example.com\n'
+              printf 'CLIENT_DOMAIN=demo.hasumo.com\n'
               printf '\n'
               printf 'MOODLE_USERNAME=admin\n'
               printf 'MOODLE_PASSWORD=%s\n' "${MOODLE_PASSWORD}"
-              printf 'MOODLE_EMAIL=admin@demo.example.com\n'
+              printf 'MOODLE_EMAIL=admin@demo.hasumo.com\n'
               printf 'MOODLE_SITE_NAME=Demo Learning\n'
-              printf 'MOODLE_HOST=demo.example.com\n'
+              printf 'MOODLE_HOST=demo.hasumo.com\n'
               printf '\n'
               printf 'MOODLE_DATABASE_HOST=mariadb\n'
               printf 'MOODLE_DATABASE_PORT_NUMBER=3306\n'

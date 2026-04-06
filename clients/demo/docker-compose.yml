@@ -29,7 +29,7 @@ services:
       start_period: 300s
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.moodle-demo.rule=Host(`demo.example.com`)"
+      - "traefik.http.routers.moodle-demo.rule=Host(`demo.hasumo.com`)"
       - "traefik.http.routers.moodle-demo.entrypoints=websecure"
       - "traefik.http.routers.moodle-demo.tls=true"
       - "traefik.http.routers.moodle-demo.tls.certresolver=letsencrypt"
