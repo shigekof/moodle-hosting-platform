@@ -112,7 +112,7 @@ jobs:
             if [[ $missing -eq 1 ]]; then
               echo '==> One or more required directories missing. Recloning repository...'
               cd /opt
-              rm -rf moodle-hosting-platform
+              rm -rf moodle-hosting-platform || true
               git clone https://github.com/shigekof/moodle-hosting-platform.git
               cd /opt/moodle-hosting-platform
             else
