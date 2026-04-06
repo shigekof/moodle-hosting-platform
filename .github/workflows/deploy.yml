@@ -59,7 +59,7 @@ jobs:
             echo "==> HOME: $HOME"
             echo "==> SSH key files: $(ls -la ~/.ssh/ 2>&1 || echo 'no .ssh dir')"
             echo "==> git version: $(git --version)"
-            export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -v"
+            export GIT_SSH_COMMAND="ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no -v"
             # Clone if the repo directory itself is missing
             if [[ ! -d /opt/moodle-hosting-platform ]]; then
               echo '==> /opt/moodle-hosting-platform not found. Cloning repository...'
