@@ -35,6 +35,8 @@ services:
       - "traefik.http.routers.moodle-demo.tls.certresolver=letsencrypt"
       - "traefik.http.routers.moodle-demo.middlewares=secure-headers@file"
       - "traefik.http.services.moodle-demo.loadbalancer.server.port=80"
+      - "traefik.http.services.moodle-demo.loadbalancer.responseForwarding.flushInterval=100ms"
+      - "traefik.http.services.moodle-demo.loadbalancer.passHostHeader=true"
 
   moodle-cron-demo:
     image: moodle-custom:latest

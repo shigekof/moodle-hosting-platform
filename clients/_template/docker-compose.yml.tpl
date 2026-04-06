@@ -37,6 +37,8 @@ services:
       - "traefik.http.routers.moodle-${CLIENT_NAME}.tls.certresolver=letsencrypt"
       - "traefik.http.routers.moodle-${CLIENT_NAME}.middlewares=secure-headers@file"
       - "traefik.http.services.moodle-${CLIENT_NAME}.loadbalancer.server.port=80"
+      - "traefik.http.services.moodle-${CLIENT_NAME}.loadbalancer.responseForwarding.flushInterval=100ms"
+      - "traefik.http.services.moodle-${CLIENT_NAME}.loadbalancer.passHostHeader=true"
 
   # Moodle cron — runs Moodle background tasks every minute (T027c)
   moodle-cron-${CLIENT_NAME}:
