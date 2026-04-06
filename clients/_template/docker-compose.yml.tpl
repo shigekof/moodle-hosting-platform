@@ -8,6 +8,9 @@ name: moodle-demo
 services:
   moodle-${CLIENT_NAME}:
     image: moodle-custom:latest
+    build:
+      context: moodle
+      dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
       - clients/${CLIENT_NAME}/.env
@@ -38,6 +41,9 @@ services:
   # Moodle cron — runs Moodle background tasks every minute (T027c)
   moodle-cron-${CLIENT_NAME}:
     image: moodle-custom:latest
+    build:
+      context: moodle
+      dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
       - clients/${CLIENT_NAME}/.env
@@ -61,7 +67,7 @@ services:
 
   seed-${CLIENT_NAME}:
     build:
-      context: ./seed
+      context: seed
       dockerfile: Dockerfile
     restart: "no"
     env_file:

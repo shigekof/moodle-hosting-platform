@@ -7,7 +7,7 @@ services:
   moodle-demo:
     image: moodle-custom:latest
     build:
-      context: ../../moodle
+      context: moodle
       dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
@@ -39,7 +39,7 @@ services:
   moodle-cron-demo:
     image: moodle-custom:latest
     build:
-      context: ../../moodle
+      context: moodle
       dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
@@ -64,7 +64,7 @@ services:
 
   seed-demo:
     build:
-      context: ./seed
+      context: seed
       dockerfile: Dockerfile
     restart: "no"
     env_file:
