@@ -137,6 +137,7 @@ jobs:
               printf 'MOODLE_EMAIL=admin@demo.hasumo.com\n'
               printf 'MOODLE_SITE_NAME=Demo Learning\n'
               printf 'MOODLE_HOST=demo.hasumo.com\n'
+              printf 'MOODLE_WWWROOT=https://demo.hasumo.com\n'
               printf '\n'
               printf 'MOODLE_DATABASE_HOST=mariadb\n'
               printf 'MOODLE_DATABASE_PORT_NUMBER=3306\n'
